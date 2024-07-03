@@ -1,0 +1,74 @@
+---
+{% set name = "xnvme" %}
+{% set version = "0.7.4" %}
+{% set sha256 = "6d42d0bd7e6b395a37869a8713d138d332500f20ecc272ebf6789471026a7191" %}
+
+package:
+  name: {{ name|lower }}-sys
+  version: {{ version }}
+
+source:
+  url: https://github.com/{{ name }}/{{ name }}/releases/download/v{{ version }}/{{ name }}-{{ version }}.tar.gz
+  sha256: {{ sha256 }}
+
+build:
+  skip: true  # [not linux]
+  script: |
+    meson setup builddir --prefix=$PREFIX -Ddefault_library=shared -Dwith-spdk=false 
+    meson compile -C builddir
+    meson install -C builddir
+
+    # Create activation and deactivation scripts
+    mkdir -p $PREFIX/etc/conda/activate.d
+    mkdir -p $PREFIX/etc/conda/deactivate.d
+
+    # Activation script
+    echo 'export PATH=$PREFIX/bin:$PREFIX/usr/bin:$PREFIX/usr/local/bin:$PREFIX/usr/local/lib/x86_64-linux-gnu:$PATH' > $PREFIX/etc/conda/activate.d/xnvme.sh
+    echo 'export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:$PREFIX/lib64/pkgconfig:$PREFIX/usr/local/lib64/pkgconfig:$PREFIX/usr/local/lib/pkgconfig:$PREFIX/usr/local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH' >> $PREFIX/etc/conda/activate.d/xnvme.sh
+
+    # Deactivation script
+    echo 'unset PATH' > $PREFIX/etc/conda/deactivate.d/xnvme.sh
+    echo 'unset PKG_CONFIG_PATH' >> $PREFIX/etc/conda/deactivate.d/xnvme.sh
+  number: 0
+
+requirements:
+  build:
+  - {{ compiler('c') }}
+  - {{ stdlib('c') }}
+  - meson
+  - ninja
+  - pkg-config
+
+  host:
+  - {{ stdlib('c') }}
+  - libaio  # [linux]
+  - liburing  # [linux]
+  - pkg-config
+
+  run:
+  - {{ stdlib('c') }}
+  - libaio  # [linux]
+  - liburing  # [linux]
+  - pkg-config
+
+# Test that the xNVMe CLI tool can run without error and the library pc files
+# can be utilized to locate the library
+test:
+  commands:
+    - which xnvme
+    - xnvme library-info
+    - pkg-config xnvme --libs
+
+about:
+  home: https://xnvme.io/
+  summary: Tools and libraries for efficient I/O
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file:
+    - LICENSE
+  doc_url: https://xnvme.io/
+  dev_url: https://github.com/xnvme/xnvme
+
+extra:
+  recipe-maintainers:
+    - safl

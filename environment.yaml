@@ -1,0 +1,7 @@
+---
+name: xnvme_conda_build
+channels:
+- conda-forge
+dependencies:
+- conda-build
+- conda-verify

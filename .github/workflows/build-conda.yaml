@@ -1,0 +1,38 @@
+name: Build Conda Package
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        conda_recipe: ['xnvme-sys', 'xnvme']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          miniconda-version: "latest"
+
+      - name: Setup Conda environment
+        run: make environment
+
+      - name: Build the Conda package
+        run: make ${{ matrix.conda_recipe }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.conda_recipe }}-conda-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ github.workspace }}/builddir
+

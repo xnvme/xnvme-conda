@@ -1,0 +1,49 @@
+---
+{% set name = "xnvme" %}
+{% set version = "0.7.4" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/xnvme-{{ version }}.tar.gz
+  sha256: 78af768a33ab54cc3896687d1bc3e0de6543e0ebf342c36639004dda9ddd34db
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python >=3.6
+    - setuptools >=42
+    - wheel
+    - pip
+  run:
+    - python >=3.6
+    - pytest
+    - setuptools >=40.1
+
+test:
+  imports:
+    - xnvme.ctypes_bindings
+    - xnvme.ctypes_bindings.tests
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://xnvme.io/
+  summary: xNVMe ctypes language-bindings for Python
+  license: BSD-3-Clause
+  license_file:
+    - LICENSE
+  doc_url: https://xnvme.io/
+  dev_url: https://github.com/xnvme/xnvme
+
+extra:
+  recipe-maintainers:
+    - safl
